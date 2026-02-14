@@ -80,7 +80,7 @@ Create a `.env` file in the `backend` directory based on the template below:
 
 ```bash
 # Server Configuration
-PORT=5000
+PORT=5002
 NODE_ENV=development
 
 # Database Configuration
@@ -125,7 +125,7 @@ npm install
 Create a `.env.local` file in the root directory if needed (for frontend-specific vars):
 
 ```bash
-VITE_API_URL=http://localhost:5000/api
+VITE_API_URL=http://localhost:5002/api
 ```
 
 Start the frontend development server:
@@ -136,7 +136,7 @@ npm run dev
 
 ### 5. Running the App
 
-*   **Backend:** Runs on `http://localhost:5000`
+*   **Backend:** Runs on `http://localhost:5002`
 *   **Frontend:** Runs on `http://localhost:5173`
 
 Access the application at `http://localhost:5173`.
@@ -144,13 +144,23 @@ Access the application at `http://localhost:5173`.
 ## 📸 Screenshots
 
 ### Login Screen
-![Login Screen](path/to/image)
+![Login Screen](screenshots/Auth.png)
 
-### Admin Dashboard
-![Admin Dashboard](path/to/image)
+### Home Screen
+![Home Screen](screenshots/Home.png)
 
-### Asset Scanning
-![Asset Scanning](path/to/image)
+### Item Screen
+![Items Screen](screenshots/Item.png)
+![ItemDetail Screen](screenshots/ItemDetail.png)
+
+### Lending Screen
+![Lending Screen](screenshots/Lending.png)
+
+### Profile Screen
+![Profile Screen](screenshots/Profile.png)
+
+### Dark Mode Screen
+![Dark Mode Screen](screenshots/Dark.png)
 
 ## 📞 Contact
 
