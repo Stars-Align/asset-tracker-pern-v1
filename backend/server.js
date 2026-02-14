@@ -1,35 +1,32 @@
 import app from './src/app.js';
-import { config } from './src/config/env.js';
 import { sequelize } from './src/models/index.js';
 
-const startServer = async () => {
-    try {
-        // Test database connection and sync models
-        await sequelize.authenticate();
-        await sequelize.sync({ alter: true });
-        console.log('Database synced');
+// 缓存数据库连接状态 (防止每次请求都重新连)
+let isConnected = false;
 
-        // Start server
-        if (process.env.NODE_ENV !== 'production') {
-            app.listen(config.port, () => {
-                console.log(`✓ Server running on http://localhost:${config.port}`);
-                console.log(`✓ Environment: ${config.nodeEnv}`);
-                console.log(`✓ API Health: http://localhost:${config.port}/health`);
-            });
-        }
-    } catch (error) {
-        console.error('✗ Unable to start server:', error);
-        // Log to file for debugging
-        if (process.env.NODE_ENV !== 'production') {
-            const fs = await import('fs');
-            fs.writeFileSync('startup_error.txt', `Error: ${error.message}\nStack: ${error.stack}\n`);
-            process.exit(1);
+export default async (req, res) => {
+    // 1. 确保数据库已连接
+    if (!isConnected) {
+        try {
+            await sequelize.authenticate();
+            isConnected = true;
+            console.log('⚡️ Database connected for Serverless Function');
+        } catch (error) {
+            console.error('❌ Database connection failed:', error);
+            return res.status(500).json({ error: 'Database Connection Failed' });
         }
     }
+
+    // 2. 修正路由前缀 (最关键的一步！)
+    // Vercel 发来的请求是 "/api/auth/login"
+    // 如果你的 Express 路由只定义了 "/auth/login"，这里必须把 "/api" 切掉
+    if (req.url.startsWith('/api')) {
+        req.url = req.url.replace(/^\/api/, '') || '/';
+    }
+
+    // 如果切完变成空字符串，补一个斜杠
+    if (req.url === '') req.url = '/';
+
+    // 3. 将请求转交给 Express 处理
+    return app(req, res);
 };
-
-// Start the database connection (and server if local)
-startServer();
-
-// Export the app for Vercel
-export default app;
