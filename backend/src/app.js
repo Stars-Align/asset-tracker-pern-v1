@@ -37,8 +37,26 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // CORS configuration
+// CORS configuration
+const allowedOrigins = [
+    'http://localhost:5173', // Local development
+    'https://asset-tracker-pern-v1.vercel.app', // Production Vercel domain
+    process.env.FRONTEND_URL // Allow env variable override
+];
+
 app.use(cors({
-    origin: config.cors.origin,
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+
+        // Check if the origin matches or is a Vercel subdomain
+        if (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
+            return callback(null, true);
+        } else {
+            console.log("Blocked Origin:", origin);
+            return callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true,
 }));
 

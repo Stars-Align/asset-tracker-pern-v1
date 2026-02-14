@@ -3,7 +3,9 @@
  * Handles JWT token management, error handling, and HTTP requests
  */
 
-const API_BASE_URL = 'http://localhost:5002/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5002/api';
+
+console.log("🚀 Current API Base URL:", API_BASE_URL); // Log for debugging
 
 /**
  * Get the JWT token from localStorage
@@ -56,6 +58,7 @@ const fetchWithAuth = async (endpoint, options = {}) => {
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     ...options,
     headers,
+    credentials: 'include', // Ensure cookies are sent (for sessions)
   });
 
   if (!response.ok) {
