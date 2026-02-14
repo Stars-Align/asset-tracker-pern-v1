@@ -70,13 +70,17 @@ if (config.nodeEnv === 'development') {
 }
 
 // Health check endpoint
-app.get('/health', (req, res) => {
+// Health check endpoint
+app.get('/api/health', (req, res) => {
     res.json({
         success: true,
         message: 'Asset Tracker API is running',
         timestamp: new Date().toISOString(),
     });
 });
+
+// Simple debug route for Vercel
+app.get('/api/debug-health', (req, res) => res.send('Server is running!'));
 
 // API routes
 app.use('/api/auth', authRoutes);
