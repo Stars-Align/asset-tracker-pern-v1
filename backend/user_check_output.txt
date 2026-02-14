@@ -1,0 +1,5 @@
+User found: {
+  id: 'a88c2490-4a9f-4d61-820c-2501d0827b0a',
+  email: 'p9386415@gmail.com',
+  pro_expiry: 2026-03-15T05:40:26.033Z
+}

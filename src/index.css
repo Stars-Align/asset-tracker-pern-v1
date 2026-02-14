@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+/* 🟢 1. 关键设置：启用手动深色模式 */
+/* 这行代码告诉 Tailwind：只要 HTML 标签上有 class="dark"，就激活 dark: 样式 */
+@variant dark (&:where(.dark, .dark *));
+
+/* 2. 主题变量定义 */
+@theme {
+  /* --- 品牌色：森林绿 --- */
+  --color-primary: #2E7D32;
+  --color-primary-dark: #1B5E20;
+  --color-primary-light: #E8F5E9;
+
+  /* --- 背景色 (Slate 风格) --- */
+  /* 亮色模式：使用极淡的灰白色 */
+  --color-background-light: #F8F9FB;
+  /* 暗色模式：使用 Slate-950 (深蓝灰)，比纯黑更有质感 */
+  --color-background-dark: #020617; 
+
+  /* --- 表面色 (卡片/弹窗颜色) --- */
+  --color-surface-light: #FFFFFF;
+  /* 暗色模式卡片：使用 Slate-900 */
+  --color-surface-dark: #0f172a; 
+
+  /* --- 字体 --- */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* 3. 全局基础设置 */
+:root {
+  /* 移除移动端点击高亮 */
+  -webkit-tap-highlight-color: transparent;
+  /* 让浏览器滚动条自动适配深色/浅色 */
+  color-scheme: light dark;
+}
+
+/* 4. Body 样式应用 */
+body {
+  /* 基础字体和平滑抗锯齿 */
+  @apply font-sans antialiased;
+
+  /* --- 亮色模式默认值 --- */
+  @apply bg-background-light text-slate-900;
+
+  /* --- 🟢 暗色模式覆盖值 --- */
+  /* 文字变成灰白色 (slate-100)，背景变成深色 */
+  @apply dark:bg-background-dark dark:text-slate-100;
+
+  /* 🟢 增加颜色过渡，让切换模式时如丝般顺滑 */
+  transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+/* 5. (可选) 全局滚动条美化 */
+/* 仅在非移动端生效，让滚动条也变漂亮 */
+@media (min-width: 640px) {
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-slate-300 dark:bg-slate-700 rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-slate-400 dark:bg-slate-600;
+  }
+}
