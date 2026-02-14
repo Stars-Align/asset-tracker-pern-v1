@@ -10,18 +10,26 @@ const startServer = async () => {
         console.log('Database synced');
 
         // Start server
-        app.listen(config.port, () => {
-            console.log(`✓ Server running on http://localhost:${config.port}`);
-            console.log(`✓ Environment: ${config.nodeEnv}`);
-            console.log(`✓ API Health: http://localhost:${config.port}/health`);
-        });
+        if (process.env.NODE_ENV !== 'production') {
+            app.listen(config.port, () => {
+                console.log(`✓ Server running on http://localhost:${config.port}`);
+                console.log(`✓ Environment: ${config.nodeEnv}`);
+                console.log(`✓ API Health: http://localhost:${config.port}/health`);
+            });
+        }
     } catch (error) {
         console.error('✗ Unable to start server:', error);
         // Log to file for debugging
-        const fs = await import('fs');
-        fs.writeFileSync('startup_error.txt', `Error: ${error.message}\nStack: ${error.stack}\n`);
-        process.exit(1);
+        if (process.env.NODE_ENV !== 'production') {
+            const fs = await import('fs');
+            fs.writeFileSync('startup_error.txt', `Error: ${error.message}\nStack: ${error.stack}\n`);
+            process.exit(1);
+        }
     }
 };
 
+// Start the database connection (and server if local)
 startServer();
+
+// Export the app for Vercel
+export default app;
