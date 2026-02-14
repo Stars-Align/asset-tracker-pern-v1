@@ -24,6 +24,7 @@
     "jsonwebtoken": "^9.0.3",
     "jsqr": "^1.4.0",
     "lucide-react": "^0.563.0",
+    "morgan": "^1.10.1",
     "pg": "^8.18.0",
     "pg-hstore": "^2.3.4",
     "postcss": "^8.5.6",
