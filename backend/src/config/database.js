@@ -10,6 +10,12 @@ const sequelize = new Sequelize(
         port: config.database.port,
         dialect: 'postgres',
         logging: config.nodeEnv === 'development' ? console.log : false,
+        dialectOptions: config.nodeEnv === 'production' ? {
+            ssl: {
+                require: true,
+                rejectUnauthorized: false
+            }
+        } : {},
         pool: {
             max: 5,
             min: 0,
