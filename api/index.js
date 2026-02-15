@@ -1,72 +1,77 @@
-import app from '../backend/src/app.js';
-import { sequelize } from '../backend/src/models/index.js';
-
-// Cache the database connection
-let isConnected = false;
+// api/index.js
+// ⚠️ 注意：顶部不要有任何 import ... from ... 语句
+// 我们将所有引用都放入 try-catch 中进行“动态加载”
 
 export default async (req, res) => {
+    // 防止浏览器缓存 500 错误页面
+    res.setHeader('Cache-Control', 'no-store, max-age=0');
     console.log('⚡️ Vercel Function Invoked: ' + req.url);
 
     try {
-        // 1. Establish database connection (Cached)
-        if (!isConnected) {
-            console.log('--- Attempting to connect to DB ---');
-            try {
-                // Set timeout to prevent hanging connections
-                await Promise.race([
-                    sequelize.authenticate(),
-                    new Promise((_, reject) => setTimeout(() => reject(new Error('DB Connection Timeout')), 5000))
-                ]);
-                isConnected = true;
-                console.log('⚡️ Vercel: Database connected successfully');
-            } catch (dbError) {
-                console.error('❌ Vercel: DB Connection Error:', dbError.message);
-                // Return specific error
-                return res.status(500).json({
-                    error: 'Database Connection Failed',
-                    details: dbError.message,
-                    hint: 'Check if DATABASE_URL is correct and SSL is enabled.'
-                });
-            }
-        }
+        // ============================================================
+        // 1. 动态加载模块 (Dynamic Imports)
+        // 这是解决 "Dashboard 无报错但页面 500" 的关键！
+        // 如果这里有路径错误或文件缺失，会立刻跳到 catch 块并显示出来。
+        // ============================================================
+        console.log('🔄 Loading backend modules...');
+        
+        // 这里的路径必须精准，且必须包含 .js 后缀
+        const [appModule, dbModule] = await Promise.all([
+            import('../backend/src/app.js'),
+            import('../backend/src/models/index.js')
+        ]);
 
-        // 2. Path Rewrite Logic
-        // Vercel sends /api/auth/login.
-        // Express now expects /auth/login (we reverted app.js to standard routes).
-        // So we MUST strip /api.
+        const app = appModule.default;
+        const sequelize = dbModule.sequelize;
+        console.log('✅ Modules loaded successfully!');
+
+        // ============================================================
+        // 2. 数据库连接检查
+        // ============================================================
+        console.log('--- Attempting to connect to DB ---');
+        // 设置 5秒 超时，防止请求挂起
+        await Promise.race([
+            sequelize.authenticate(),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('DB Connection Timeout')), 5000))
+        ]);
+        console.log('⚡️ Vercel: Database connected successfully');
+
+
+        // ============================================================
+        // 3. 路径重写逻辑 (Path Rewrite)
+        // ============================================================
         const originalUrl = req.url;
         if (req.url.startsWith('/api')) {
             req.url = req.url.replace(/^\/api/, '');
         }
-
-        // Handle root case: if url was just /api, it becomes empty, redirect to /
         if (req.url === '') {
             req.url = '/';
         }
-
-        // Log rewrite for debugging
         console.log(`🚀 Route Rewritten: ${originalUrl} -> ${req.url}`);
 
-        // 3. Hand over to Express
-        // Wrap in Promise to capture sync/async errors from Express
-        return await new Promise((resolve, reject) => {
-            app(req, res, (err) => {
-                if (err) {
-                    console.error('❌ Express Error:', err);
-                    return reject(err);
-                }
-                resolve();
-            });
-        });
+
+        // ============================================================
+        // 4. 转交 Express 处理
+        // ============================================================
+        // 我们不需要再包装 Promise，直接让 Express 接管
+        // 因为 app(req, res) 本身在 Serverless 环境下就是异步兼容的
+        return app(req, res);
 
     } catch (criticalError) {
-        // Critical error handler
-        console.error('🚨 CRITICAL SERVER ERROR:', criticalError);
+        // ============================================================
+        // 🚨 终极错误捕获区 (CRITICAL ERROR HANDLER)
+        // ============================================================
+        console.error('🚨 CRITICAL STARTUP ERROR:', criticalError);
+        
+        // 返回详细的 JSON 错误信息
+        // 重点查看 message 和 code 字段
         return res.status(500).json({
-            error: 'Serverless Function Crashed',
-            message: criticalError.message,
-            stack: process.env.NODE_ENV === 'production' ? 'Hidden in production' : criticalError.stack,
-            path: req.url
+            status: 'CRITICAL_STARTUP_CRASH',
+            error_type: criticalError.name, // 例如 "Error" 或 "SyntaxError"
+            message: criticalError.message, // 例如 "Cannot find module..."
+            code: criticalError.code,       // 例如 "ERR_MODULE_NOT_FOUND"
+            hint: "Check specific file paths in 'stack' or missing .js extensions",
+            stack: process.env.NODE_ENV === 'production' ? criticalError.stack : criticalError.stack
         });
     }
 };
