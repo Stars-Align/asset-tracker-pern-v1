@@ -11,7 +11,7 @@ const testImport = async (name) => {
 };
 
 (async () => {
-    await testImport('bcrypt');
+    await testImport('bcryptjs');
     await testImport('jsonwebtoken');
     await testImport('express');
     await testImport('cors');

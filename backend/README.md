@@ -9,7 +9,7 @@ Backend API for Asset Tracker - A Multi-tenant SaaS Asset Inventory Management S
 - **Database**: PostgreSQL
 - **ORM**: Sequelize
 - **Authentication**: JWT (JSON Web Tokens)
-- **Password Hashing**: bcrypt
+- **Password Hashing**: bcryptjs
 
 ## Setup Instructions
 
