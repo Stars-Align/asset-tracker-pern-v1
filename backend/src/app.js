@@ -8,7 +8,8 @@ import connectPgSimple from 'connect-pg-simple'; // 👈 1. 引入 PG Store
 
 // 配置与数据库
 import { config } from './config/env.js';
-import sequelize from './config/database.js'; // 👈 2. 引入 Sequelize 实例以复用连接池
+// 注意：虽然 Session 不再直接用 sequelize.pool，但我们仍需导入 sequelize 以确保数据库初始化
+import sequelize from './config/database.js'; 
 import { configurePassport } from './config/passport.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
@@ -79,8 +80,14 @@ const isProduction = config.nodeEnv === 'production';
 
 app.use(session({
     store: new PgSession({
-        // 直接复用 sequelize 的连接池，无需重新建立连接
-        pool: sequelize.connectionManager.pool,
+        // ❌ 删除: pool: sequelize.connectionManager.pool, (这会导致 query is not a function 错误)
+        // ✅ 新增: 使用 conObject 直接传入连接配置，让插件自己管理连接
+        conObject: {
+            connectionString: process.env.DATABASE_URL,
+            ssl: {
+                rejectUnauthorized: false // Vercel/Neon 环境必须开启此选项
+            }
+        },
         tableName: 'session', // 确保你的数据库里会自动创建这张表
         createTableIfMissing: true // 自动建表
     }),
