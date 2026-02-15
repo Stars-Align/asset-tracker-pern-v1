@@ -95,8 +95,8 @@ export const configurePassport = () => {
         clientSecret: process.env.MICROSOFT_CLIENT_SECRET || 'PLACEHOLDER',
         // ✅ 修复：使用动态计算的 BASE_URL
         callbackURL: `${BASE_URL}/api/auth/microsoft/callback`,
-        tenant: 'consumers', // Use 'consumers' for personal Microsoft accounts
-        scope: ['openid', 'profile', 'email'], 
+        tenant: 'common', // Use 'consumers' for personal Microsoft accounts
+        scope: ['user.read', 'openid', 'profile', 'email'],
         passReqToCallback: true,
         proxy: true // 🌟 Vercel 是反向代理，必须开启此选项
     }, async (req, accessToken, refreshToken, profile, done) => {
