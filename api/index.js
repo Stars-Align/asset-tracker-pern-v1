@@ -1,16 +1,18 @@
 import app from '../backend/src/app.js';
 import { sequelize } from '../backend/src/models/index.js';
 
-// 缓存数据库连接
+// Cache the database connection
 let isConnected = false;
 
 export default async (req, res) => {
+    console.log('⚡️ Vercel Function Invoked: ' + req.url);
+
     try {
-        // 1. 尝试建立数据库连接
+        // 1. Establish database connection (Cached)
         if (!isConnected) {
             console.log('--- Attempting to connect to DB ---');
             try {
-                // 设置超时限制，防止连接挂起
+                // Set timeout to prevent hanging connections
                 await Promise.race([
                     sequelize.authenticate(),
                     new Promise((_, reject) => setTimeout(() => reject(new Error('DB Connection Timeout')), 5000))
@@ -19,7 +21,7 @@ export default async (req, res) => {
                 console.log('⚡️ Vercel: Database connected successfully');
             } catch (dbError) {
                 console.error('❌ Vercel: DB Connection Error:', dbError.message);
-                // 💥 关键：如果数据库连不上，直接返回具体错误
+                // Return specific error
                 return res.status(500).json({
                     error: 'Database Connection Failed',
                     details: dbError.message,
@@ -28,35 +30,38 @@ export default async (req, res) => {
             }
         }
 
-        // 2. 路径重写逻辑
+        // 2. Path Rewrite Logic
+        // Vercel sends /api/auth/login.
+        // Express now expects /auth/login (we reverted app.js to standard routes).
+        // So we MUST strip /api.
         const originalUrl = req.url;
         if (req.url.startsWith('/api')) {
             req.url = req.url.replace(/^\/api/, '');
         }
+
+        // Handle root case: if url was just /api, it becomes empty, redirect to /
         if (req.url === '') {
             req.url = '/';
         }
 
-        // 打印调试日志（在 Vercel Logs 中可见）
-        console.log(`🚀 Route: ${originalUrl} -> ${req.url}`);
+        // Log rewrite for debugging
+        console.log(`🚀 Route Rewritten: ${originalUrl} -> ${req.url}`);
 
-        // 3. 将请求交给 Express 处理
-        // 我们用 Promise 包装它，捕获 Express 内部的同步或异步崩溃
+        // 3. Hand over to Express
+        // Wrap in Promise to capture sync/async errors from Express
         return await new Promise((resolve, reject) => {
-            try {
-                app(req, res, (err) => {
-                    if (err) reject(err);
-                    resolve();
-                });
-            } catch (expressError) {
-                reject(expressError);
-            }
+            app(req, res, (err) => {
+                if (err) {
+                    console.error('❌ Express Error:', err);
+                    return reject(err);
+                }
+                resolve();
+            });
         });
 
     } catch (criticalError) {
-        // 🚨 终极错误捕获：捕获代码中任何位置的崩溃
+        // Critical error handler
         console.error('🚨 CRITICAL SERVER ERROR:', criticalError);
-
         return res.status(500).json({
             error: 'Serverless Function Crashed',
             message: criticalError.message,

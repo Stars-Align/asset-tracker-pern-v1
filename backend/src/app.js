@@ -37,7 +37,6 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // CORS configuration
-// CORS configuration
 const allowedOrigins = [
     'http://localhost:5173', // Local development
     'https://asset-tracker-pern-v1.vercel.app', // Production Vercel domain
@@ -70,8 +69,6 @@ if (config.nodeEnv === 'development') {
 }
 
 // Health check endpoint
-// Health check endpoint
-// Health check endpoint
 app.get('/health', (req, res) => {
     res.json({
         success: true,
@@ -84,9 +81,8 @@ app.get('/health', (req, res) => {
 app.get('/debug-health', (req, res) => res.send('Server is running!'));
 
 // API routes
-// API routes
 app.use('/auth', authRoutes);
-app.use('/users', authRoutes); // Users route reusing authRoutes? Verified in previous step context, might be alias.
+app.use('/users', authRoutes); // Users route reusing authRoutes?
 app.use('/profiles', profileRoutes);
 app.use('/locations', locationRoutes);
 app.use('/categories', categoryRoutes);
