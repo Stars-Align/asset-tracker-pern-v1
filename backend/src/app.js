@@ -71,7 +71,8 @@ if (config.nodeEnv === 'development') {
 
 // Health check endpoint
 // Health check endpoint
-app.get('/api/health', (req, res) => {
+// Health check endpoint
+app.get('/health', (req, res) => {
     res.json({
         success: true,
         message: 'Asset Tracker API is running',
@@ -80,19 +81,20 @@ app.get('/api/health', (req, res) => {
 });
 
 // Simple debug route for Vercel
-app.get('/api/debug-health', (req, res) => res.send('Server is running!'));
+app.get('/debug-health', (req, res) => res.send('Server is running!'));
 
 // API routes
-app.use('/api/auth', authRoutes);
-app.use('/api/users', authRoutes);
-app.use('/api/profiles', profileRoutes);
-app.use('/api/locations', locationRoutes);
-app.use('/api/categories', categoryRoutes);
-app.use('/api/items', itemRoutes);
-app.use('/api/lending-logs', lendingLogRoutes);
-app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/ai', aiRoutes);
+// API routes
+app.use('/auth', authRoutes);
+app.use('/users', authRoutes); // Users route reusing authRoutes? Verified in previous step context, might be alias.
+app.use('/profiles', profileRoutes);
+app.use('/locations', locationRoutes);
+app.use('/categories', categoryRoutes);
+app.use('/items', itemRoutes);
+app.use('/lending-logs', lendingLogRoutes);
+app.use('/dashboard', dashboardRoutes);
+app.use('/admin', adminRoutes);
+app.use('/ai', aiRoutes);
 
 // 404 handler
 app.use((req, res) => {
