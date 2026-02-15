@@ -18,9 +18,10 @@ import Profile from './pages/Profile';
 import AdminDashboard from './pages/AdminDashboard';
 import UserManagement from './pages/Admin/UserManagement';
 
-// 🟢 2. 定义 PayPal 配置 (放在组件外部，防止重载)
+// 🟢 2. 定义 PayPal 配置 (改为读取环境变量)
 const PAYPAL_OPTIONS = {
-  "client-id": "AS-6bU65ObKTP6EUhnHkLBOk2x6tjezabC969VWH2UKmDHpKwc0-WII7y80Lh2fLpvdBSZls0I7lp5Cq", // 你的真实 Client ID
+  // 这里不再硬编码，而是读取 .env 文件或 Vercel 后台配置
+  "client-id": import.meta.env.VITE_PAYPAL_CLIENT_ID, 
   currency: "USD",
   intent: "capture",
 };
@@ -40,9 +41,6 @@ export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     return !!localStorage.getItem('token');
   });
-
-  // Auth state is now initialized lazily above to prevent redirect loops.
-  // We can listen for storage events if needed, but for now this is sufficient.
 
   // Global Dark Mode Listener
   useEffect(() => {

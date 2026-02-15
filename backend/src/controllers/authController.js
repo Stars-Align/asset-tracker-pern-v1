@@ -166,6 +166,10 @@ export const updateProfile = async (req, res, next) => {
 
 // 🌟 Upgrade Pro (PayPal Success Callback)
 // Modified: Updates pro_expiry instead of is_admin
+// 🌟 Upgrade Pro (PayPal Success Callback)
+// Modified: Updates pro_expiry instead of is_admin
+import { client, paypal } from '../config/paypal.js';
+
 export const upgradePro = async (req, res, next) => {
     try {
         // 1. Validate User
@@ -174,19 +178,41 @@ export const upgradePro = async (req, res, next) => {
         }
 
         const { orderID } = req.body;
+        if (!orderID) {
+            throw new BadRequestError('PayPal Order ID is required');
+        }
+
         console.log(`💰 Processing Pro upgrade for User ID: ${req.user.id}, PayPal Order: ${orderID}`);
 
-        // 2. Find User
+        // 2. Verify PayPal Order (Server-Side)
+        const request = new paypal.orders.OrdersGetRequest(orderID);
+        let order;
+        try {
+            order = await client.execute(request);
+        } catch (err) {
+            console.error('PayPal API Error:', err);
+            throw new BadRequestError('Failed to verify payment with PayPal');
+        }
+
+        // Check if payment is COMPLETED
+        if (order.result.status !== 'COMPLETED') {
+            console.warn(`Payment verification failed: Order status is ${order.result.status}`);
+            throw new BadRequestError('Payment not completed');
+        }
+
+        console.log('✅ Payment verified successfully!');
+
+        // 3. Find User
         const user = await Profile.findByPk(req.user.id);
         if (!user) {
             throw new UnauthorizedError('User profile not found');
         }
 
-        // 3. Upgrade Logic: Calculate Pro Expiry
+        // 4. Upgrade Logic: Calculate Pro Expiry
         // Subscription duration: 30 days
         const DURATION_DAYS = 30;
         const durationMs = DURATION_DAYS * 24 * 60 * 60 * 1000;
-        
+
         const now = new Date();
         const currentExpiry = user.pro_expiry ? new Date(user.pro_expiry) : null;
 
@@ -205,11 +231,11 @@ export const upgradePro = async (req, res, next) => {
 
         // Update the field
         user.pro_expiry = newExpiry;
-        
+
         // Save to DB
         await user.save();
 
-        // 4. Return Success
+        // 5. Return Success
         res.status(200).json({
             success: true,
             message: 'User upgraded to Pro successfully',
@@ -218,7 +244,7 @@ export const upgradePro = async (req, res, next) => {
                     id: user.id,
                     email: user.email,
                     full_name: user.full_name,
-                    is_admin: user.is_admin, 
+                    is_admin: user.is_admin,
                     pro_expiry: user.pro_expiry // Frontend uses this to show "Pro" badge
                 }
             }
@@ -270,7 +296,7 @@ export const oauthCallback = async (req, res) => {
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
 
     // Check if this is account linking (has state token) or login (no state)
-    const hasStateToken = req.query.state && req.query.state.length > 50; 
+    const hasStateToken = req.query.state && req.query.state.length > 50;
 
     if (hasStateToken) {
         // MODE: Account Linking - redirect to profile
