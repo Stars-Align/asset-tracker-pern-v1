@@ -1,4 +1,5 @@
 import { Sequelize } from 'sequelize';
+import pg from 'pg'; // 👈 1. 关键修改：显式导入 pg 驱动
 import { config } from './env.js';
 
 const sequelize = new Sequelize(
@@ -9,6 +10,11 @@ const sequelize = new Sequelize(
         host: config.database.host,
         port: config.database.port,
         dialect: 'postgres',
+        
+        // 👈 2. 关键修改：强制 Sequelize 使用我们导入的 pg 模块
+        // 这解决了 Vercel 找不到驱动的问题
+        dialectModule: pg, 
+
         logging: config.nodeEnv === 'development' ? console.log : false,
         dialectOptions: config.nodeEnv === 'production' ? {
             ssl: {
@@ -23,8 +29,8 @@ const sequelize = new Sequelize(
             idle: 10000,
         },
         define: {
-            timestamps: false, // We'll manually define timestamps
-            underscored: true, // Use snake_case for auto-generated fields
+            timestamps: false,
+            underscored: true,
         },
     }
 );
