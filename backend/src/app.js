@@ -2,11 +2,15 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import { config } from './config/env.js';
-import { errorHandler } from './middleware/errorHandler.js';
-import passport from 'passport';
 import session from 'express-session';
+import passport from 'passport';
+import connectPgSimple from 'connect-pg-simple'; // 👈 1. 引入 PG Store
+
+// 配置与数据库
+import { config } from './config/env.js';
+import sequelize from './config/database.js'; // 👈 2. 引入 Sequelize 实例以复用连接池
 import { configurePassport } from './config/passport.js';
+import { errorHandler } from './middleware/errorHandler.js';
 
 // Import routes
 import authRoutes from './routes/auth.js';
@@ -21,34 +25,31 @@ import adminRoutes from './routes/admin.js';
 
 const app = express();
 
+// ====================================================================
+// 🌟 关键修改 A: 信任 Vercel 代理
+// 没有这一行，express 认为请求是 http 的，会导致 secure cookie 失效
+// ====================================================================
+app.set('trust proxy', 1);
+
 // Security middleware
 app.use(helmet());
 
-// Session and Passport
-app.use(session({
-    secret: config.jwt.secret,
-    resave: false,
-    saveUninitialized: false,
-    cookie: { secure: false } // Set to true if using HTTPS
-}));
-
-configurePassport();
-app.use(passport.initialize());
-app.use(passport.session());
-
-// CORS configuration
+// ====================================================================
+// 🌟 关键修改 B: CORS 配置 (允许携带凭证)
+// ====================================================================
 const allowedOrigins = [
-    'http://localhost:5173', // Local development
-    'https://asset-tracker-pern-v1.vercel.app', // Production Vercel domain
-    process.env.FRONTEND_URL // Allow env variable override
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'https://asset-tracker-pern-v1.vercel.app', // 你的生产前端域名
+    process.env.FRONTEND_URL 
 ];
 
 app.use(cors({
     origin: function (origin, callback) {
         // Allow requests with no origin (like mobile apps or curl requests)
         if (!origin) return callback(null, true);
-
-        // Check if the origin matches or is a Vercel subdomain
+        
+        // 宽松检查：只要是 vercel.app 结尾的都允许 (方便 Preview 部署)
         if (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
             return callback(null, true);
         } else {
@@ -56,33 +57,66 @@ app.use(cors({
             return callback(new Error('Not allowed by CORS'));
         }
     },
-    credentials: true,
+    credentials: true, // 必须为 true 才能接收 Cookie
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Body parsing middleware
+// Body parsing
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Logging middleware
+// Logging
 if (config.nodeEnv === 'development') {
     app.use(morgan('dev'));
 }
 
-// Health check endpoint
+// ====================================================================
+// 🌟 关键修改 C: Session 配置 (持久化存储 + 安全 Cookie)
+// ====================================================================
+const PgSession = connectPgSimple(session);
+const isProduction = config.nodeEnv === 'production';
+
+app.use(session({
+    store: new PgSession({
+        // 直接复用 sequelize 的连接池，无需重新建立连接
+        pool: sequelize.connectionManager.pool,
+        tableName: 'session', // 确保你的数据库里会自动创建这张表
+        createTableIfMissing: true // 自动建表
+    }),
+    secret: config.jwt.secret || 'default_secret_key',
+    resave: false,
+    saveUninitialized: false, // 只有登录成功才创建 session
+    proxy: true, // 配合 trust proxy
+    cookie: {
+        maxAge: 24 * 60 * 60 * 1000, // 1 天
+        httpOnly: true, // 防止 XSS 偷取 Cookie
+        // ⚠️ Vercel 生产环境强制开启 Secure 和 SameSite: None
+        secure: isProduction, 
+        sameSite: isProduction ? 'none' : 'lax' 
+    }
+}));
+
+// Passport initialization
+configurePassport();
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Health check
 app.get('/health', (req, res) => {
     res.json({
         success: true,
         message: 'Asset Tracker API is running',
+        env: config.nodeEnv,
         timestamp: new Date().toISOString(),
     });
 });
 
-// Simple debug route for Vercel
 app.get('/debug-health', (req, res) => res.send('Server is running!'));
 
 // API routes
 app.use('/auth', authRoutes);
-app.use('/users', authRoutes); // Users route reusing authRoutes?
+app.use('/users', authRoutes); 
 app.use('/profiles', profileRoutes);
 app.use('/locations', locationRoutes);
 app.use('/categories', categoryRoutes);
@@ -100,7 +134,7 @@ app.use((req, res) => {
     });
 });
 
-// Global error handler (must be last)
+// Global error handler
 app.use(errorHandler);
 
 export default app;
