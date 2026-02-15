@@ -3,7 +3,7 @@
  * Handles JWT token management, error handling, and HTTP requests
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5002/api';
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://asset-tracker-pern-v1.vercel.app/api';
 
 console.log("🚀 Current API Base URL:", API_BASE_URL); // Log for debugging
 

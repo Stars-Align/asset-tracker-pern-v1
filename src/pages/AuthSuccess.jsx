@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import api from '../lib/api';
 import { Loader2, CheckCircle2 } from 'lucide-react';
 
 export default function AuthSuccess() {
@@ -14,7 +15,7 @@ export default function AuthSuccess() {
             localStorage.setItem('token', token);
 
             // Fetch user data with the token
-            fetch('/api/auth/me', {
+            api.get('/auth/me', {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }

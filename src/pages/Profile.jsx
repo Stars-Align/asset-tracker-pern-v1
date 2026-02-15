@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import api from '../lib/api';
+import api, { API_BASE_URL } from '../lib/api';
 import { useNavigate } from 'react-router-dom';
 import {
     LogOut, Shield, Bell, Sparkles, ChevronRight,
@@ -436,7 +436,7 @@ export default function Profile() {
 
         // 3. Construct the ABSOLUTE URL to the Backend (Port 5002)
         // We attach the token so the backend knows who to link this account to
-        const backendUrl = `http://localhost:5002/api/auth/${backendProviderRoute}?token=${token}`;
+        const backendUrl = `${API_BASE_URL}/auth/${backendProviderRoute}?token=${token}`;
 
         console.log("Redirecting to Backend:", backendUrl); // For debugging
 

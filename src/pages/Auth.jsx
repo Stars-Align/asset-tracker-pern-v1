@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import api from '../lib/api';
+import api, { API_BASE_URL } from '../lib/api';
 import { useNavigate } from 'react-router-dom';
 import {
   Mail, Lock, Loader2, ArrowRight,
@@ -191,7 +191,7 @@ export default function Auth() {
         {/* OAuth Buttons */}
         <div className="space-y-3">
           <a
-            href="http://localhost:5002/api/auth/google/login"
+            href={`${API_BASE_URL}/auth/google/login`}
             className="w-full bg-white border-2 border-slate-200 text-slate-700 py-3.5 rounded-2xl font-bold text-sm hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center justify-center gap-3 shadow-sm"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -204,7 +204,7 @@ export default function Auth() {
           </a>
 
           <a
-            href="http://localhost:5002/api/auth/microsoft/login"
+            href={`${API_BASE_URL}/auth/microsoft/login`}
             className="w-full bg-white border-2 border-slate-200 text-slate-700 py-3.5 rounded-2xl font-bold text-sm hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center justify-center gap-3 shadow-sm"
           >
             <svg className="w-5 h-5" viewBox="0 0 23 23">
