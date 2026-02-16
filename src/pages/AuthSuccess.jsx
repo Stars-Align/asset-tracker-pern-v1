@@ -20,7 +20,7 @@ export default function AuthSuccess() {
                     'Authorization': `Bearer ${token}`
                 }
             })
-                .then(res => res.json())
+                .then(res => JSON.parse(await res.text()))
                 .then(data => {
                     if (data.success && data.data) {
                         // Save user data

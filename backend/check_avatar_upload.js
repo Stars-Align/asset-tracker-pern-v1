@@ -16,7 +16,7 @@ async function test() {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, full_name: 'Test Avatar' })
     });
-    let data = await res.json();
+    let data = await JSON.parse(await res.text());
 
     if (!data.success && !data.token) {
         console.log('Register failed, trying login...');
@@ -24,7 +24,7 @@ async function test() {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password })
         });
-        data = await res.json();
+        data = await JSON.parse(await res.text());
     }
 
     if (!data.token) {

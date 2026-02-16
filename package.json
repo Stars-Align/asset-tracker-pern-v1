@@ -10,7 +10,7 @@
     "dev:frontend": "vite",
     "dev:backend": "cross-env NODE_ENV=development nodemon backend/src/app.js",
     "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
-    "build": "vite build",
+    "build": "vite build --force",
     "lint": "eslint .",
     "preview": "vite preview",
     "start": "node backend/src/server.js"

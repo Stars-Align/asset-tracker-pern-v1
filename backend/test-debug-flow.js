@@ -15,7 +15,7 @@ async function run() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password, full_name: 'Test User' })
         });
-        const regData = await regRes.json();
+        const regData = await regJSON.parse(await res.text());
         console.log('Register response:', regData);
 
         if (!regData.success) throw new Error('Registration failed');
@@ -27,7 +27,7 @@ async function run() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password })
         });
-        const loginData = await loginRes.json();
+        const loginData = await loginJSON.parse(await res.text());
         console.log('Login response:', loginData);
 
         if (!loginData.success) throw new Error('Login failed');
@@ -43,7 +43,7 @@ async function run() {
             },
             body: JSON.stringify({ name: 'Debug Location' })
         });
-        const locData = await locRes.json();
+        const locData = await locJSON.parse(await res.text());
         console.log('Create Location response:', locData);
 
     } catch (e) {
