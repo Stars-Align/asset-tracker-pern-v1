@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import api, { API_BASE_URL } from '../lib/api';
+import api from '../lib/api'; // 移除了 API_BASE_URL 的单独导入，因为我们主要用 api 实例
 import { useNavigate } from 'react-router-dom';
 import {
   Mail, Lock, Loader2, ArrowRight,
@@ -14,7 +14,7 @@ export default function Auth() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [message, setMessage] = useState(null);
 
-  // Split Login Logic
+  // --- 1. Regular & Admin Login Logic ---
   const handleAuth = async (targetDestination) => {
     setLoading(true);
     setMessage(null);
@@ -27,7 +27,7 @@ export default function Auth() {
 
       const response = await api.post(endpoint, formData);
 
-      // Handle both flat and nested data structures
+      // Handle both flat and nested data structures (Backend compatibility)
       let data = response.data ? response.data : response;
 
       console.log("Response Data:", data);
@@ -36,29 +36,31 @@ export default function Auth() {
         throw new Error('Server response missing token or user data');
       }
 
-      // 1. Temporary Save
+      // Check Admin Status
       const user = data.user;
       const isAdmin = user.is_admin === true || user.is_admin === "true" || user.is_admin === 1;
 
-      // 2. Split Logic
+      // Logic Split: Admin vs Regular User
       if (targetDestination === 'admin') {
         // --- ADMIN LOGIN ---
         if (isAdmin) {
           console.log("👮 Admin Access Granted -> /admin");
           localStorage.setItem('token', data.token);
           localStorage.setItem('user', JSON.stringify(user));
+          // Use window.location.href to force a hard reload and clear old state
           window.location.href = '/admin';
         } else {
           console.warn("⛔ Admin Access Denied");
           localStorage.removeItem('token');
           localStorage.removeItem('user');
-          throw new Error('Not an Admin account.');
+          throw new Error('This account does not have Administrator privileges.');
         }
       } else {
-        // --- REGULAR SIGN IN ---
+        // --- REGULAR SIGN IN (HOME) ---
         console.log("🏠 Regular Login -> /");
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(user));
+        // Force reload to ensure App.jsx initializes auth state correctly
         window.location.href = '/';
       }
 
@@ -73,18 +75,18 @@ export default function Auth() {
     }
   };
 
-  // --- OAuth Handlers ---
+  // --- 2. OAuth Handlers (THE CRITICAL FIX) ---
+  // ✅ 核心修复：这里必须使用 window.location.href，绝对不能用 fetch/axios
   const handleGoogleLogin = () => {
-    // Use the environment variable for the API URL
-    // If VITE_API_URL is not set, fallback to http://localhost:5002/api
+    // 确保 fallback 端口是你后端运行的端口 (5002)
     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5002/api';
-
-    // DIRECT BROWSER REDIRECT - No Fetch!
+    console.log("Redirecting to Google Auth:", `${apiUrl}/auth/google`);
     window.location.href = `${apiUrl}/auth/google`;
   };
 
   const handleMicrosoftLogin = () => {
     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5002/api';
+    console.log("Redirecting to Microsoft Auth:", `${apiUrl}/auth/microsoft`);
     window.location.href = `${apiUrl}/auth/microsoft`;
   };
 
@@ -135,7 +137,7 @@ export default function Auth() {
           </div>
         )}
 
-        {/* FORM REPLACEMENT - DIV WRAPPER */}
+        {/* Form Inputs */}
         <div className="space-y-4">
           <div>
             <label className="block text-xs font-bold text-slate-400 ml-1 mb-2 uppercase tracking-wider">Email</label>
@@ -169,7 +171,7 @@ export default function Auth() {
             </div>
           </div>
 
-          {/* Button 1: Sign In (Home) */}
+          {/* Button 1: Main Action (Sign In / Sign Up) */}
           <button
             type="button"
             onClick={() => handleAuth('home')}
@@ -179,7 +181,7 @@ export default function Auth() {
             {loading ? <Loader2 className="animate-spin" /> : (isSignUp ? 'Create Account' : 'Sign In')}
           </button>
 
-          {/* Button 2: Admin Login (Admin) - Only for Login mode */}
+          {/* Button 2: Admin Login (Only shown in Login mode) */}
           {!isSignUp && (
             <button
               type="button"
@@ -203,7 +205,7 @@ export default function Auth() {
           </div>
         </div>
 
-        {/* OAuth Buttons */}
+        {/* OAuth Buttons (Cleaned up SVGs) */}
         <div className="space-y-3">
           <button
             type="button"
@@ -224,6 +226,7 @@ export default function Auth() {
             onClick={handleMicrosoftLogin}
             className="w-full bg-white border-2 border-slate-200 text-slate-700 py-3.5 rounded-2xl font-bold text-sm hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center justify-center gap-3 shadow-sm"
           >
+            {/* Corrected Microsoft SVG ViewBox for better alignment */}
             <svg className="w-5 h-5" viewBox="0 0 23 23">
               <path fill="#f3f3f3" d="M0 0h23v23H0z" />
               <path fill="#f35325" d="M1 1h10v10H1z" />
