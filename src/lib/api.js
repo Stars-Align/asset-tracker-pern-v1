@@ -43,11 +43,9 @@ const handleError = async (response) => {
     // Fallback
     errorMessage = response.statusText || errorMessage;
   }
-  // If response is not JSON, use status text
-  errorMessage = response.statusText || errorMessage;
-}
 
-throw new Error(errorMessage);
+  throw new Error(errorMessage);
+};
 
 
 /**
