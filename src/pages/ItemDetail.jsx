@@ -4,7 +4,7 @@ import api from '../lib/api';
 import { QRCodeCanvas } from 'qrcode.react';
 import {
   ArrowLeft, MapPin, Tag, DollarSign, Calendar,
-  Trash2, Edit2, Save, X, Loader2, Box, QrCode, ChevronDown
+  Trash2, Edit2, Save, X, Loader2, Box, QrCode, ChevronDown, Plus, Check
 } from 'lucide-react';
 
 export default function ItemDetail() {
@@ -23,6 +23,12 @@ export default function ItemDetail() {
   const [subLocations, setSubLocations] = useState([]);
   const [parentLocationId, setParentLocationId] = useState('');
   const [subLocationId, setSubLocationId] = useState('');
+
+  // Creation State
+  const [isCreatingRoom, setIsCreatingRoom] = useState(false);
+  const [newRoomName, setNewRoomName] = useState('');
+  const [isCreatingSubspace, setIsCreatingSubspace] = useState(false);
+  const [newSubspaceName, setNewSubspaceName] = useState('');
 
   useEffect(() => {
     fetchItemDetails();
@@ -89,9 +95,65 @@ export default function ItemDetail() {
 
   const handleParentLocationChange = (e) => {
     const pid = e.target.value;
-    setParentLocationId(pid);
-    setSubLocationId('');
-    fetchSubLocations(pid);
+    if (pid === 'NEW_ROOM') {
+      setIsCreatingRoom(true);
+      setParentLocationId('');
+      setSubLocationId('');
+      setSubLocations([]);
+    } else {
+      setIsCreatingRoom(false);
+      setParentLocationId(pid);
+      setSubLocationId('');
+      fetchSubLocations(pid);
+    }
+  };
+
+  const handleCreateRoom = async () => {
+    if (!newRoomName.trim()) return;
+    setIsProcessing(true);
+    try {
+      const res = await api.post('/locations', { name: newRoomName });
+      const newRoom = res.data.location;
+      setLocations([...locations, newRoom]);
+      setParentLocationId(newRoom.id);
+      setIsCreatingRoom(false);
+      setNewRoomName('');
+    } catch (e) {
+      alert('Failed to create room: ' + e.message);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleSubLocationChange = (e) => {
+    const sid = e.target.value;
+    if (sid === 'NEW_SUBSPACE') {
+      setIsCreatingSubspace(true);
+      setSubLocationId('');
+    } else {
+      setIsCreatingSubspace(false);
+      setSubLocationId(sid);
+    }
+  };
+
+  const handleCreateSubspace = async () => {
+    if (!newSubspaceName.trim() || !parentLocationId) return;
+    setIsProcessing(true);
+    try {
+      const res = await api.post('/locations', {
+        name: newSubspaceName,
+        parent_id: parentLocationId
+      });
+      const newSubspace = res.data.location;
+      setSubLocations([...subLocations, newSubspace]);
+      setSubLocationId(newSubspace.id);
+      setIsCreatingSubspace(false);
+      setNewSubspaceName('');
+    } catch (e) {
+      alert('Failed to create subspace: ' + e.message);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   async function handleUpdate() {
@@ -231,39 +293,85 @@ export default function ItemDetail() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <div>
                 <label className="text-xs font-bold text-slate-400 uppercase ml-1">Room</label>
-                <div className="relative">
-                  <select
-                    className="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl font-bold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-primary appearance-none"
-                    value={parentLocationId}
-                    onChange={handleParentLocationChange}
-                  >
-                    <option value="">Select Room...</option>
-                    {locations.map(loc => (
-                      <option key={loc.id} value={loc.id}>{loc.name}</option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-4 top-4 text-slate-400 pointer-events-none" size={20} />
-                </div>
+                {isCreatingRoom ? (
+                  <div className="flex gap-2">
+                    <input
+                      autoFocus
+                      className="w-[60%] p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl font-bold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-primary"
+                      placeholder="New Room Name"
+                      value={newRoomName}
+                      onChange={e => setNewRoomName(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') handleCreateRoom();
+                        if (e.key === 'Escape') setIsCreatingRoom(false);
+                      }}
+                    />
+                    <button onClick={handleCreateRoom} disabled={!newRoomName.trim() || isProcessing} className="p-3 bg-primary text-white rounded-2xl flex items-center justify-center shadow-lg disabled:opacity-50">
+                      <Check size={20} />
+                    </button>
+                    <button onClick={() => setIsCreatingRoom(false)} className="p-3 bg-red-100 text-red-500 rounded-2xl flex items-center justify-center">
+                      <X size={20} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <select
+                      className="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl font-bold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-primary appearance-none"
+                      value={parentLocationId}
+                      onChange={handleParentLocationChange}
+                    >
+                      <option value="" disabled>Select Room...</option>
+                      {locations.map(loc => (
+                        <option key={loc.id} value={loc.id}>{loc.name}</option>
+                      ))}
+                      <option value="NEW_ROOM" className="font-bold text-primary">+ Create New Room</option>
+                    </select>
+                    <ChevronDown className="absolute right-4 top-4 text-slate-400 pointer-events-none" size={20} />
+                  </div>
+                )}
               </div>
               <div>
                 <label className="text-xs font-bold text-slate-400 uppercase ml-1">Subspace</label>
-                <div className="relative">
-                  <select
-                    disabled={!parentLocationId}
-                    className="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl font-bold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-primary appearance-none disabled:opacity-50"
-                    value={subLocationId}
-                    onChange={e => setSubLocationId(e.target.value)}
-                  >
-                    <option value="">No subspace</option>
-                    {subLocations.map(loc => (
-                      <option key={loc.id} value={loc.id}>{loc.name}</option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-4 top-4 text-slate-400 pointer-events-none" size={20} />
-                </div>
+                {isCreatingSubspace ? (
+                  <div className="flex gap-2">
+                    <input
+                      autoFocus
+                      className="w-[60%] p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl font-bold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-primary"
+                      placeholder="New Subspace Name"
+                      value={newSubspaceName}
+                      onChange={e => setNewSubspaceName(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') handleCreateSubspace();
+                        if (e.key === 'Escape') setIsCreatingSubspace(false);
+                      }}
+                    />
+                    <button onClick={handleCreateSubspace} disabled={!newSubspaceName.trim() || isProcessing} className="p-3 bg-primary text-white rounded-2xl flex items-center justify-center shadow-lg disabled:opacity-50">
+                      <Check size={20} />
+                    </button>
+                    <button onClick={() => setIsCreatingSubspace(false)} className="p-3 bg-red-100 text-red-500 rounded-2xl flex items-center justify-center">
+                      <X size={20} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <select
+                      disabled={!parentLocationId || isCreatingRoom}
+                      className="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl font-bold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-primary appearance-none disabled:opacity-50"
+                      value={subLocationId}
+                      onChange={handleSubLocationChange}
+                    >
+                      <option value="">No subspace</option>
+                      {subLocations.map(loc => (
+                        <option key={loc.id} value={loc.id}>{loc.name}</option>
+                      ))}
+                      <option value="NEW_SUBSPACE" className="font-bold text-primary">+ Create New Subspace</option>
+                    </select>
+                    <ChevronDown className="absolute right-4 top-4 text-slate-400 pointer-events-none" size={20} />
+                  </div>
+                )}
               </div>
             </div>
 

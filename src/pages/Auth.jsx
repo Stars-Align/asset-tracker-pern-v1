@@ -73,6 +73,21 @@ export default function Auth() {
     }
   };
 
+  // --- OAuth Handlers ---
+  const handleGoogleLogin = () => {
+    // Hard redirect to backend OAuth endpoint
+    const targetUrl = `${API_BASE_URL}/auth/google/login`;
+    console.log("Redirecting to Google Auth:", targetUrl);
+    window.location.href = targetUrl;
+  };
+
+  const handleMicrosoftLogin = () => {
+    // Hard redirect to backend OAuth endpoint
+    const targetUrl = `${API_BASE_URL}/auth/microsoft/login`;
+    console.log("Redirecting to Microsoft Auth:", targetUrl);
+    window.location.href = targetUrl;
+  };
+
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
       handleAuth('home');
@@ -190,8 +205,9 @@ export default function Auth() {
 
         {/* OAuth Buttons */}
         <div className="space-y-3">
-          <a
-            href={`${API_BASE_URL}/auth/google/login`}
+          <button
+            type="button"
+            onClick={handleGoogleLogin}
             className="w-full bg-white border-2 border-slate-200 text-slate-700 py-3.5 rounded-2xl font-bold text-sm hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center justify-center gap-3 shadow-sm"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -201,10 +217,11 @@ export default function Auth() {
               <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
             </svg>
             Continue with Google
-          </a>
+          </button>
 
-          <a
-            href={`${API_BASE_URL}/auth/microsoft/login`}
+          <button
+            type="button"
+            onClick={handleMicrosoftLogin}
             className="w-full bg-white border-2 border-slate-200 text-slate-700 py-3.5 rounded-2xl font-bold text-sm hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center justify-center gap-3 shadow-sm"
           >
             <svg className="w-5 h-5" viewBox="0 0 23 23">
@@ -215,7 +232,7 @@ export default function Auth() {
               <path fill="#ffba08" d="M12 12h10v10H12z" />
             </svg>
             Continue with Microsoft
-          </a>
+          </button>
         </div>
 
       </div>
