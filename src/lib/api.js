@@ -48,7 +48,7 @@ const handleError = async (response) => {
 }
 
 throw new Error(errorMessage);
-};
+
 
 /**
  * Make a fetch request with automatic token injection
