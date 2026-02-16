@@ -1,10 +1,17 @@
 // backend/src/config/database.js
 import { Sequelize } from 'sequelize';
-import pg from 'pg'; 
+import pg from 'pg';
 import { config } from './env.js';
 import dotenv from 'dotenv';
 
-dotenv.config();
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Explicitly load .env from backend root if not already loaded
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 let sequelize;
 
@@ -49,7 +56,7 @@ if (databaseUrl) {
             dialectModule: pg,
             logging: console.log,
             // 本地通常不需要 SSL，或者根据你的配置决定
-            dialectOptions: {}, 
+            dialectOptions: {},
             define: {
                 timestamps: false,
                 underscored: true
