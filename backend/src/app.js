@@ -122,23 +122,29 @@ app.get('/health', (req, res) => {
 app.get('/debug-health', (req, res) => res.send('Server is running!'));
 
 // API routes
-// Mount all routes under /api to match Vercel's rewrite structure
-app.use('/api/auth', authRoutes);
-app.use('/api/users', authRoutes);
-app.use('/api/profiles', profileRoutes);
-app.use('/api/locations', locationRoutes);
-app.use('/api/categories', categoryRoutes);
-app.use('/api/items', itemRoutes);
-app.use('/api/lending-logs', lendingLogRoutes);
-app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/ai', aiRoutes);
+const apiRouter = express.Router();
+
+apiRouter.use('/auth', authRoutes);
+apiRouter.use('/users', authRoutes); // Note: /users also points to authRoutes in original code? Keeping as is.
+apiRouter.use('/profiles', profileRoutes);
+apiRouter.use('/locations', locationRoutes);
+apiRouter.use('/categories', categoryRoutes);
+apiRouter.use('/items', itemRoutes);
+apiRouter.use('/lending-logs', lendingLogRoutes);
+apiRouter.use('/dashboard', dashboardRoutes);
+apiRouter.use('/admin', adminRoutes);
+apiRouter.use('/ai', aiRoutes);
+
+// Mount the API router at both '/api' (for local/standard) and '/' (for Vercel if prefix is stripped)
+app.use('/api', apiRouter);
+app.use('/', apiRouter);
 
 // 404 handler
 app.use((req, res) => {
     res.status(404).json({
         success: false,
         message: 'Route not found',
+        path: req.originalUrl
     });
 });
 
