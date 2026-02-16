@@ -3,8 +3,11 @@
  * Handles JWT token management, error handling, and HTTP requests
  */
 
-export const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5002/api' : 'https://asset-tracker-pern-v1.vercel.app/api');
-
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 
+  (window.location.hostname === 'localhost' 
+    ? 'http://localhost:5002/api' 
+    : `${window.location.origin}/api`);
+    
 console.log("🚀 Current API Base URL:", API_BASE_URL); // Log for debugging
 
 /**
@@ -19,29 +22,21 @@ const getToken = () => {
  */
 const handleError = async (response) => {
   if (response.status === 401) {
-    // Unauthorized - clear storage and redirect to login
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    window.location.href = '/';
+    if (window.location.pathname !== '/') window.location.href = '/';
     throw new Error('Session expired. Please login again.');
   }
 
-  // Try to parse error message from response
-  let errorMessage = 'An error occurred';
+  const textBody = await response.text();
+  let errorMessage = `Server Error (${response.status})`;
+  
   try {
-    const contentType = response.headers.get("content-type");
-    if (contentType && contentType.indexOf("application/json") !== -1) {
-      const errorData = await response.json();
-      errorMessage = errorData.message || errorData.error || errorMessage;
-    } else {
-      // If not JSON, use status text or get text body
-      const textBody = await response.text();
-      errorMessage = textBody.length < 100 ? textBody : `Server Error (${response.status}): ${response.statusText}`;
-      console.warn('Non-JSON Error Response:', textBody.substring(0, 200));
-    }
+    const errorData = JSON.parse(textBody);
+    errorMessage = errorData.message || errorData.error || errorMessage;
   } catch (e) {
-    // Fallback
-    errorMessage = response.statusText || errorMessage;
+    // 如果返回的是 HTML 报错页，截取前 100 字符，否则用状态文本
+    errorMessage = textBody.length < 100 ? textBody : `Error ${response.status}: ${response.statusText}`;
   }
 
   throw new Error(errorMessage);
@@ -64,7 +59,8 @@ const fetchWithAuth = async (endpoint, options = {}) => {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  const response = await fetch(`${API_BASE_URL}${cleanEndpoint}`, {
     ...options,
     headers,
     credentials: 'include', // Ensure cookies are sent (for sessions)
@@ -83,12 +79,12 @@ const fetchWithAuth = async (endpoint, options = {}) => {
   // DEBUGGING: Safe JSON parsing
   const text = await response.text();
   try {
-    return JSON.parse(text);
+    const parsedData = JSON.parse(text);
+    // 逻辑找回：如果后端包裹了 .data，自动解包；否则直接返回
+    return parsedData.data ? parsedData.data : parsedData;
   } catch (e) {
-    console.error("Received HTML instead of JSON. Server might be down or routing is wrong.");
-    console.error("Response preview:", text.substring(0, 500));
-    // throw new Error("Server returned HTML. Check Vercel Logs.");
-    return null; // Don't crash the app, return null
+    console.error("❌ JSON 解析失败，收到非 JSON 数据 (通常是 Vercel 路由返回了 HTML)。预览:", text.substring(0, 300));
+    return null; 
   }
 };
 
