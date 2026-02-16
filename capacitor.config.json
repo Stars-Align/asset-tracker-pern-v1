@@ -1,5 +1,13 @@
 {
   "appId": "com.assettrackerv1.app",
   "appName": "asset-tracker",
-  "webDir": "dist"
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https",
+    "allowNavigation": [
+      "accounts.google.com",
+      "login.microsoftonline.com",
+      "*.vercel.app"
+    ]
+  }
 }

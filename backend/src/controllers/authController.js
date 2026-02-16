@@ -292,8 +292,13 @@ export const oauthCallback = async (req, res) => {
         { expiresIn: config.jwt.expiresIn }
     );
 
-    // Ensure FRONTEND_URL is set in Vercel Environment Variables
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    // 1. Define the Frontend Base URL dynamically
+    let frontendUrl;
+    if (process.env.NODE_ENV === 'production') {
+        frontendUrl = process.env.FRONTEND_URL; // Ensure this env var is set in Vercel
+    } else {
+        frontendUrl = 'http://localhost:5173';
+    }
 
     // Check if this is account linking (has state token) or login (no state)
     const hasStateToken = req.query.state && req.query.state.length > 50;
@@ -303,7 +308,8 @@ export const oauthCallback = async (req, res) => {
         res.redirect(`${frontendUrl}/profile?auth=success`);
     } else {
         // MODE: OAuth Login - redirect with token
-        res.redirect(`${frontendUrl}/auth/success?token=${token}`);
+        // Default Web Redirect (The Android Intent Filter can also intercept this if we switch to App Links later)
+        return res.redirect(`${frontendUrl}/auth/success?token=${token}`);
     }
 };
 
