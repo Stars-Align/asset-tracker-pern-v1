@@ -5,31 +5,26 @@ import { Profile } from '../models/index.js';
 import { config } from './env.js';
 import jwt from 'jsonwebtoken';
 
-// 🔍 核心修复：动态获取当前环境的 Base URL
-const getBaseUrl = () => {
-    // 1. 优先读取我们在 Vercel 设置的显式变量
-    if (process.env.BACKEND_URL) return process.env.BACKEND_URL;
-    
-    // 2. 其次读取 Vercel 自动提供的 URL (注意：Vercel 提供的默认不带 https://)
-    if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
-    
-    // 3. 读取本地配置文件
-    if (config.apiUrl) return config.apiUrl;
-    
-    // 4. 本地开发保底
-    return 'http://localhost:5002';
+// 🔍 核心修复：根据 NODE_ENV 动态返回 Callback URL
+const getCallbackURL = (provider) => {
+    if (process.env.NODE_ENV === 'production') {
+        // Vercel Production Environment
+        return `https://asset-tracker-pern-v1.vercel.app/api/auth/${provider}/callback`;
+    }
+    // Local Development Environment
+    return `http://localhost:5002/api/auth/${provider}/callback`;
 };
 
-const BASE_URL = getBaseUrl().replace(/\/$/, ''); // 移除末尾可能的斜杠
-console.log('🔗 Passport Callback Base URL:', BASE_URL); // 部署后在 Log 里看一眼确认
+// No need for BASE_URL constant anymore as we use full paths
+console.log('🔗 Passport Environment:', process.env.NODE_ENV);
 
 export const configurePassport = () => {
     // Google Strategy
     passport.use(new GoogleStrategy({
         clientID: process.env.GOOGLE_CLIENT_ID || 'PLACEHOLDER',
         clientSecret: process.env.GOOGLE_CLIENT_SECRET || 'PLACEHOLDER',
-        // ✅ 修复：使用动态计算的 BASE_URL
-        callbackURL: `${BASE_URL}/api/auth/google/callback`,
+        // ✅ 修复：使用动态计算的 CALLBACK_URL
+        callbackURL: getCallbackURL('google'),
         passReqToCallback: true,
         proxy: true // 🌟 Vercel 是反向代理，必须开启此选项才能正确处理 HTTPS 回调
     }, async (req, accessToken, refreshToken, profile, done) => {
@@ -93,8 +88,8 @@ export const configurePassport = () => {
     passport.use(new MicrosoftStrategy({
         clientID: process.env.MICROSOFT_CLIENT_ID || 'PLACEHOLDER',
         clientSecret: process.env.MICROSOFT_CLIENT_SECRET || 'PLACEHOLDER',
-        // ✅ 修复：使用动态计算的 BASE_URL
-        callbackURL: `${BASE_URL}/api/auth/microsoft/callback`,
+        // ✅ 修复：使用动态计算的 CALLBACK_URL
+        callbackURL: getCallbackURL('microsoft'),
         tenant: 'consumers', // Use 'consumers' for personal Microsoft accounts
         scope: ['user.read', 'openid', 'profile', 'email'],
         passReqToCallback: true,
