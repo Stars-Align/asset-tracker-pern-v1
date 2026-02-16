@@ -8,10 +8,15 @@ import { QRCodeCanvas } from 'qrcode.react'; // Keep this if used, or switch to 
 const analyzeImageWithAI = async (base64Image) => {
     try {
         const res = await api.post('/ai/analyze', { image: base64Image });
-        if (res.success) {
+        // api.js unwraps response.data if present, so we get the 'data' object directly
+        // The controller returns { success: true, data: { ... } }, so res is { name: ..., category: ... }
+        if (res && (res.name || res.description)) {
+            return res;
+        } else if (res && res.success && res.data) {
+            // Fallback in case api.js didn't unwrap it (unlikely with current logic)
             return res.data;
         } else {
-            throw new Error(res.message || 'AI Analysis failed');
+            throw new Error(res.message || 'AI Analysis failed to return valid data');
         }
     } catch (error) {
         console.error("Gemini AI Scan Error:", error);
