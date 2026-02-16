@@ -26,10 +26,10 @@ export default function AuthSuccess() {
                         // Save user data
                         localStorage.setItem('user', JSON.stringify(data.data));
 
-                        // Redirect to home after a short delay
+                        // Redirect to home after a short delay (Hard Reload to update App state)
                         setTimeout(() => {
-                            navigate('/');
-                        }, 1000);
+                            window.location.href = '/';
+                        }, 500);
                     } else {
                         throw new Error('Failed to fetch user data');
                     }
