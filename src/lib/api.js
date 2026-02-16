@@ -29,14 +29,25 @@ const handleError = async (response) => {
   // Try to parse error message from response
   let errorMessage = 'An error occurred';
   try {
-    const errorData = await response.json();
-    errorMessage = errorData.message || errorData.error || errorMessage;
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.indexOf("application/json") !== -1) {
+      const errorData = await response.json();
+      errorMessage = errorData.message || errorData.error || errorMessage;
+    } else {
+      // If not JSON, use status text or get text body
+      const textBody = await response.text();
+      errorMessage = textBody.length < 100 ? textBody : `Server Error (${response.status}): ${response.statusText}`;
+      console.warn('Non-JSON Error Response:', textBody.substring(0, 200));
+    }
   } catch (e) {
-    // If response is not JSON, use status text
+    // Fallback
     errorMessage = response.statusText || errorMessage;
   }
+  // If response is not JSON, use status text
+  errorMessage = response.statusText || errorMessage;
+}
 
-  throw new Error(errorMessage);
+throw new Error(errorMessage);
 };
 
 /**
@@ -65,8 +76,14 @@ const fetchWithAuth = async (endpoint, options = {}) => {
     await handleError(response);
   }
 
-  // Return parsed JSON response
-  return await response.json();
+  // Return parsed JSON response if Content-Type is valid
+  const contentType = response.headers.get("content-type");
+  if (contentType && contentType.indexOf("application/json") !== -1) {
+    return await response.json();
+  }
+
+  // If not JSON, return text or null to avoid crash
+  return null;
 };
 
 /**
