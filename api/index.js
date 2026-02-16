@@ -14,7 +14,7 @@ export default async (req, res) => {
         // 如果这里有路径错误或文件缺失，会立刻跳到 catch 块并显示出来。
         // ============================================================
         console.log('🔄 Loading backend modules...');
-        
+
         // 这里的路径必须精准，且必须包含 .js 后缀
         const [appModule, dbModule] = await Promise.all([
             import('../backend/src/app.js'),
@@ -38,16 +38,12 @@ export default async (req, res) => {
 
 
         // ============================================================
-        // 3. 路径重写逻辑 (Path Rewrite)
+        // 3. 路径重写逻辑 (Path Rewrite) - REMOVED
         // ============================================================
+        // We moved the route mounting to /api in app.js, so we receive the full path.
+        // Vercel rewrites /api/... -> /api/index.js, but req.url preserves the original path.
         const originalUrl = req.url;
-        if (req.url.startsWith('/api')) {
-            req.url = req.url.replace(/^\/api/, '');
-        }
-        if (req.url === '') {
-            req.url = '/';
-        }
-        console.log(`🚀 Route Rewritten: ${originalUrl} -> ${req.url}`);
+        console.log(`🚀 Request URL: ${originalUrl}`);
 
 
         // ============================================================
@@ -62,7 +58,7 @@ export default async (req, res) => {
         // 🚨 终极错误捕获区 (CRITICAL ERROR HANDLER)
         // ============================================================
         console.error('🚨 CRITICAL STARTUP ERROR:', criticalError);
-        
+
         // 返回详细的 JSON 错误信息
         // 重点查看 message 和 code 字段
         return res.status(500).json({

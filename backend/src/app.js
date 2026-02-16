@@ -9,7 +9,7 @@ import connectPgSimple from 'connect-pg-simple'; // 👈 1. 引入 PG Store
 // 配置与数据库
 import { config } from './config/env.js';
 // 注意：虽然 Session 不再直接用 sequelize.pool，但我们仍需导入 sequelize 以确保数据库初始化
-import sequelize from './config/database.js'; 
+import sequelize from './config/database.js';
 import { configurePassport } from './config/passport.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
@@ -42,14 +42,14 @@ const allowedOrigins = [
     'http://localhost:5173',
     'http://localhost:3000',
     'https://asset-tracker-pern-v1.vercel.app', // 你的生产前端域名
-    process.env.FRONTEND_URL 
+    process.env.FRONTEND_URL
 ];
 
 app.use(cors({
     origin: function (origin, callback) {
         // Allow requests with no origin (like mobile apps or curl requests)
         if (!origin) return callback(null, true);
-        
+
         // 宽松检查：只要是 vercel.app 结尾的都允许 (方便 Preview 部署)
         if (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
             return callback(null, true);
@@ -99,8 +99,8 @@ app.use(session({
         maxAge: 24 * 60 * 60 * 1000, // 1 天
         httpOnly: true, // 防止 XSS 偷取 Cookie
         // ⚠️ Vercel 生产环境强制开启 Secure 和 SameSite: None
-        secure: isProduction, 
-        sameSite: isProduction ? 'none' : 'lax' 
+        secure: isProduction,
+        sameSite: isProduction ? 'none' : 'lax'
     }
 }));
 
@@ -122,16 +122,17 @@ app.get('/health', (req, res) => {
 app.get('/debug-health', (req, res) => res.send('Server is running!'));
 
 // API routes
-app.use('/auth', authRoutes);
-app.use('/users', authRoutes); 
-app.use('/profiles', profileRoutes);
-app.use('/locations', locationRoutes);
-app.use('/categories', categoryRoutes);
-app.use('/items', itemRoutes);
-app.use('/lending-logs', lendingLogRoutes);
-app.use('/dashboard', dashboardRoutes);
-app.use('/admin', adminRoutes);
-app.use('/ai', aiRoutes);
+// Mount all routes under /api to match Vercel's rewrite structure
+app.use('/api/auth', authRoutes);
+app.use('/api/users', authRoutes);
+app.use('/api/profiles', profileRoutes);
+app.use('/api/locations', locationRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/items', itemRoutes);
+app.use('/api/lending-logs', lendingLogRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/ai', aiRoutes);
 
 // 404 handler
 app.use((req, res) => {
