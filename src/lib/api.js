@@ -75,13 +75,21 @@ const fetchWithAuth = async (endpoint, options = {}) => {
   }
 
   // Return parsed JSON response if Content-Type is valid
-  const contentType = response.headers.get("content-type");
-  if (contentType && contentType.indexOf("application/json") !== -1) {
-    return await response.json();
-  }
+  // const contentType = response.headers.get("content-type");
+  // if (contentType && contentType.indexOf("application/json") !== -1) {
+  //   return await response.json();
+  // }
 
-  // If not JSON, return text or null to avoid crash
-  return null;
+  // DEBUGGING: Safe JSON parsing
+  const text = await response.text();
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    console.error("Received HTML instead of JSON. Server might be down or routing is wrong.");
+    console.error("Response preview:", text.substring(0, 500));
+    // throw new Error("Server returned HTML. Check Vercel Logs.");
+    return null; // Don't crash the app, return null
+  }
 };
 
 /**
