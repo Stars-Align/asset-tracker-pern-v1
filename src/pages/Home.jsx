@@ -62,8 +62,8 @@ export default function Home() {
             const locsRes = await api.get('/locations');
             const itemsRes = await api.get('/items');
 
-            const locs = locsRes.data?.locations || [];
-            const items = itemsRes.data?.items || [];
+            const locs = locsRes.locations || locsRes.data?.locations || [];
+            const items = itemsRes.items || itemsRes.data?.items || [];
 
             if (locs && items) {
                 // Only show root locations (no parent_id)

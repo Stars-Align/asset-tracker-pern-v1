@@ -20,11 +20,13 @@ export default function AuthSuccess() {
                     'Authorization': `Bearer ${token}`
                 }
             })
-                .then(res => JSON.parse(await res.text()))
                 .then(data => {
-                    if (data.success && data.data) {
+                    if (data) {
+                        // Compatible with both wrapped and unwrapped responses
+                        const user = data.data || data;
+
                         // Save user data
-                        localStorage.setItem('user', JSON.stringify(data.data));
+                        localStorage.setItem('user', JSON.stringify(user));
 
                         // Redirect to home immediately (Hard Reload to update App state)
                         window.location.href = '/home';
