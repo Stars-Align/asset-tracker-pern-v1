@@ -242,8 +242,14 @@ export default function ScanPage() {
                 // We'll keep it for now.
             });
 
-            if (res.success) {
+            if (res && res.item) {
                 navigate(`/item/${res.item.id}`);
+            } else if (res && res.id) {
+                // Fallback if unwrapped differently
+                navigate(`/item/${res.id}`);
+            } else if (res && res.success && res.data && res.data.item) {
+                // Fallback if not unwrapped
+                navigate(`/item/${res.data.item.id}`);
             }
         } catch (error) {
             alert("Save failed: " + error.message);
