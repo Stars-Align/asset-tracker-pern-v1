@@ -1,6 +1,14 @@
 import dotenv from 'dotenv';
 
-dotenv.config();
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Try to load .env from current directory, or backend root if running from project root
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+dotenv.config(); // Fallback to default (cwd)
 
 export const config = {
   port: process.env.PORT || 5001,
