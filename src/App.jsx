@@ -21,7 +21,7 @@ import UserManagement from './pages/Admin/UserManagement';
 // 🟢 2. 定义 PayPal 配置 (改为读取环境变量)
 const PAYPAL_OPTIONS = {
   // 这里不再硬编码，而是读取 .env 文件或 Vercel 后台配置
-  "client-id": import.meta.env.VITE_PAYPAL_CLIENT_ID, 
+  "client-id": import.meta.env.VITE_PAYPAL_CLIENT_ID,
   currency: "USD",
   intent: "capture",
 };
@@ -63,7 +63,9 @@ export default function App() {
       <Router>
         <Routes>
           {/* Public routes */}
-          <Route path="/auth" element={<Auth />} />
+          <Route path="/" element={
+            isAuthenticated ? <Navigate to="/home" /> : <Auth />
+          } />
           <Route path="/auth/success" element={<AuthSuccess />} />
 
           {/* Protected routes */}
@@ -86,21 +88,24 @@ export default function App() {
                 <Route path="*" element={
                   <Layout>
                     <Routes>
-                      <Route path="/" element={<Home />} />
+                      {/* Home is now /home */}
+                      <Route path="/home" element={<Home />} />
                       <Route path="/search" element={<Search />} />
                       <Route path="/scan" element={<Scan />} />
                       <Route path="/lending" element={<Lending />} />
                       <Route path="/profile" element={<Profile />} />
                       <Route path="/location/:id" element={<LocationView />} />
                       <Route path="/item/:id" element={<ItemDetail />} />
-                      <Route path="*" element={<Navigate to="/" replace />} />
+                      {/* Default fallback for authenticated users is /home */}
+                      <Route path="*" element={<Navigate to="/home" replace />} />
                     </Routes>
                   </Layout>
                 } />
               </Routes>
             } />
           ) : (
-            <Route path="*" element={<Navigate to="/auth" replace />} />
+            /* Catch-all for unauthenticated users is / (Auth) */
+            <Route path="*" element={<Navigate to="/" replace />} />
           )}
         </Routes>
       </Router>

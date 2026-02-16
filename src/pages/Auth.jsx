@@ -61,7 +61,7 @@ export default function Auth() {
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(user));
         // Force reload to ensure App.jsx initializes auth state correctly
-        window.location.href = '/';
+        window.location.href = '/home';
       }
 
     } catch (err) {

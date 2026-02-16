@@ -27,7 +27,7 @@ export default function AuthSuccess() {
                         localStorage.setItem('user', JSON.stringify(data.data));
 
                         // Redirect to home immediately (Hard Reload to update App state)
-                        window.location.href = '/';
+                        window.location.href = '/home';
                     } else {
                         throw new Error('Failed to fetch user data');
                     }
