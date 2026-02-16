@@ -75,18 +75,17 @@ export default function Auth() {
 
   // --- OAuth Handlers ---
   const handleGoogleLogin = () => {
-    // MUST use window.location.href for OAuth redirects
-    // Target: http://localhost:5002/api/auth/google/login (in dev)
+    // Use the environment variable for the API URL
+    // If VITE_API_URL is not set, fallback to http://localhost:5002/api
     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5002/api';
-    console.log("Redirecting to Google Auth:", `${apiUrl}/auth/google/login`);
-    window.location.href = `${apiUrl}/auth/google/login`;
+
+    // DIRECT BROWSER REDIRECT - No Fetch!
+    window.location.href = `${apiUrl}/auth/google`;
   };
 
   const handleMicrosoftLogin = () => {
-    // Must use window.location.href
     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5002/api';
-    console.log("Redirecting to Microsoft Auth:", `${apiUrl}/auth/microsoft/login`);
-    window.location.href = `${apiUrl}/auth/microsoft/login`;
+    window.location.href = `${apiUrl}/auth/microsoft`;
   };
 
   const handleKeyDown = (e) => {
