@@ -19,7 +19,7 @@ export default function UserManagement() {
         try {
             const res = await api.getUsers();
             if (res.success) {
-                setUsers(res.data.users);
+                setUsers(res.users);
             }
         } catch (error) {
             console.error('Failed to load users:', error);

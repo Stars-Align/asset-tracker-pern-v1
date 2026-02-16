@@ -39,8 +39,8 @@ export default function ItemDetail() {
     try {
       setLoading(true);
       const response = await api.get(`/items/${id}`);
-      if (response.data && response.data.item) {
-        const itemData = response.data.item;
+      if (response.item) {
+        const itemData = response.item;
         if (itemData) {
           // console.log('Item details fetched:', itemData);
           // console.log('Location data:', itemData.location);
@@ -74,7 +74,7 @@ export default function ItemDetail() {
   async function fetchRooms() {
     try {
       const res = await api.get('/locations?parent_id=null');
-      setLocations(res.data.locations || []);
+      setLocations(res.locations || []);
     } catch (e) {
       console.error("Fetch rooms error", e);
     }
@@ -87,7 +87,7 @@ export default function ItemDetail() {
     }
     try {
       const res = await api.get(`/locations?parent_id=${parentId}`);
-      setSubLocations(res.data.locations || []);
+      setSubLocations(res.locations || []);
     } catch (e) {
       console.error("Fetch sub-locations error", e);
     }
@@ -113,7 +113,7 @@ export default function ItemDetail() {
     setIsProcessing(true);
     try {
       const res = await api.post('/locations', { name: newRoomName });
-      const newRoom = res.data.location;
+      const newRoom = res.location;
       setLocations([...locations, newRoom]);
       setParentLocationId(newRoom.id);
       setIsCreatingRoom(false);
@@ -144,7 +144,7 @@ export default function ItemDetail() {
         name: newSubspaceName,
         parent_id: parentLocationId
       });
-      const newSubspace = res.data.location;
+      const newSubspace = res.location;
       setSubLocations([...subLocations, newSubspace]);
       setSubLocationId(newSubspace.id);
       setIsCreatingSubspace(false);

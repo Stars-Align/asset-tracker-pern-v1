@@ -53,7 +53,7 @@ export default function ScanPage() {
     async function checkUserStatus() {
         try {
             const res = await api.get('/auth/me');
-            const user = res.data.user;
+            const user = res.user;
             const expiry = user.pro_expiry ? new Date(user.pro_expiry) : null;
             const now = new Date();
             setIsPro(expiry && expiry > now);
@@ -65,7 +65,7 @@ export default function ScanPage() {
     async function fetchLocations() {
         try {
             const res = await api.get('/locations?parent_id=null');
-            setLocations(res.data.locations || []);
+            setLocations(res.locations || []);
         } catch (e) {
             console.error("Fetch locations error", e);
         }
@@ -78,7 +78,7 @@ export default function ScanPage() {
         }
         try {
             const res = await api.get(`/locations?parent_id=${parentId}`);
-            setSubLocations(res.data.locations || []);
+            setSubLocations(res.locations || []);
         } catch (e) {
             console.error("Fetch sub-locations error", e);
         }
@@ -193,7 +193,7 @@ export default function ScanPage() {
                 const res = await api.post('/locations', {
                     name: newRoomName
                 });
-                actualParentLocationId = res.data.location.id;
+                actualParentLocationId = res.location.id;
                 finalLocationId = actualParentLocationId; // Item goes directly in the new room
             } catch (error) {
                 alert("Failed to create room: " + error.message);
@@ -217,7 +217,7 @@ export default function ScanPage() {
                     name: newSubLocationName,
                     parent_id: actualParentLocationId // Use the actual parent (could be newly created)
                 });
-                finalLocationId = res.data.location.id;
+                finalLocationId = res.location.id;
             } catch (error) {
                 alert("Failed to create subspace: " + error.message);
                 return;
@@ -238,7 +238,7 @@ export default function ScanPage() {
             });
 
             if (res.success) {
-                navigate(`/item/${res.data.item.id}`);
+                navigate(`/item/${res.item.id}`);
             }
         } catch (error) {
             alert("Save failed: " + error.message);

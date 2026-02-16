@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev:frontend": "vite",
-    "dev:backend": "cross-env NODE_ENV=development nodemon backend/src/app.js",
+    "dev:backend": "cross-env NODE_ENV=development nodemon backend/server.js",
     "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
     "build": "vite build",
     "lint": "eslint .",

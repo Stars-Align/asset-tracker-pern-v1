@@ -18,19 +18,22 @@ let sequelize;
 // 🌟 核心修复逻辑：优先判断是否存在 DATABASE_URL (Vercel 生产环境)
 const databaseUrl = process.env.DATABASE_URL;
 
-if (databaseUrl) {
+if (databaseUrl && process.env.NODE_ENV === 'production') {
     // 🚀 情况 A: 生产环境 (Vercel + Neon)
-    console.log("✅ Using DATABASE_URL for connection");
+    console.log("✅ Using DATABASE_URL for connection. NODE_ENV:", process.env.NODE_ENV);
+    const isProd = process.env.NODE_ENV === 'production';
+    const dialectOptions = isProd ? {
+        ssl: {
+            require: true,
+            rejectUnauthorized: false
+        }
+    } : {};
+
     sequelize = new Sequelize(databaseUrl, {
         dialect: 'postgres',
         dialectModule: pg, // 必须显式指定 pg
         logging: false,
-        dialectOptions: {
-            ssl: {
-                require: true,
-                rejectUnauthorized: false // 必须允许自签名证书
-            }
-        },
+        dialectOptions,
         pool: {
             max: 5,
             min: 0,
@@ -44,7 +47,7 @@ if (databaseUrl) {
     });
 } else {
     // 🏠 情况 B: 本地开发环境 (Fallback)
-    console.log("⚠️ No DATABASE_URL found, using individual config params");
+    console.log("⚠️ No DATABASE_URL found (or not production), using individual config params");
     sequelize = new Sequelize(
         config.database.name,
         config.database.user,

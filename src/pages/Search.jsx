@@ -35,8 +35,8 @@ export default function ItemsPage() {
             const itemsRes = await api.get('/items');
             const catsRes = await api.get('/categories');
 
-            const itemsData = itemsRes.data.items || [];
-            const catsData = catsRes.data.categories || [];
+            const itemsData = itemsRes.items || [];
+            const catsData = catsRes.categories || [];
 
             setItems(itemsData);
             setManualCategories(catsData);

@@ -65,7 +65,7 @@ export default function LocationView() {
 
             // 1. Fetch Current Location
             const locRes = await api.get(`/locations/${id}`);
-            const locData = locRes.data.location;
+            const locData = locRes.location || locRes;
             setCurrentLocation(locData);
 
             // 2. Fetch Parent Path (if exists)
@@ -73,7 +73,7 @@ export default function LocationView() {
                 try {
                     // Note: Ideally backend returns parent info, but we can fetch it separately for now
                     const parentRes = await api.get(`/locations/${locData.parent_id}`);
-                    setParentPath(parentRes.data.location ? [parentRes.data.location] : []);
+                    setParentPath(parentRes.location ? [parentRes.location] : []);
                 } catch (e) {
                     console.warn("Could not fetch parent location", e);
                     setParentPath([]);
@@ -84,19 +84,19 @@ export default function LocationView() {
 
             // 3. Fetch Sub-locations
             const subRes = await api.get(`/locations?parent_id=${id}`);
-            const subData = subRes.data.locations || [];
+            const subData = subRes.locations || [];
             setSubLocations(subData);
 
             // 4. Fetch Items
             const itemsRes = await api.get(`/items?location_id=${id}`);
-            setItems(itemsRes.data.items || []);
+            setItems(itemsRes.items || []);
 
             // 5. Fetch Previews for Sub-locations
             if (subData && subData.length > 0) {
                 const subIds = subData.map(s => s.id);
                 // 🟢 Optimization: Backend supports comma-separated location_ids
                 const previewRes = await api.get(`/items?location_id=${subIds.join(',')}`);
-                const previewData = previewRes.data.items || [];
+                const previewData = previewRes.items || [];
 
                 const previews = {};
                 previewData.forEach(item => {
@@ -108,7 +108,7 @@ export default function LocationView() {
 
             // 6. Fetch All Locations for Move Modal (Lazy load later? For now keep simple)
             const allLocsRes = await api.get('/locations');
-            setRawAllLocations(allLocsRes.data.locations || []);
+            setRawAllLocations(allLocsRes.locations || []);
 
         } catch (error) {
             console.error("Fetch Data Error:", error);
@@ -173,7 +173,7 @@ export default function LocationView() {
             setIsCreatingInModal(false);
             // Refresh all locations list
             const allLocsRes = await api.get('/locations');
-            setRawAllLocations(allLocsRes.data.locations || []);
+            setRawAllLocations(allLocsRes.locations || []);
         } catch (error) {
             alert("Create sub-folder failed: " + error.message);
         }

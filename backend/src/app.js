@@ -82,11 +82,18 @@ app.use(session({
     store: new PgSession({
         // ❌ 删除: pool: sequelize.connectionManager.pool, (这会导致 query is not a function 错误)
         // ✅ 新增: 使用 conObject 直接传入连接配置，让插件自己管理连接
-        conObject: {
+        conObject: process.env.DATABASE_URL ? {
             connectionString: process.env.DATABASE_URL,
-            ssl: {
+            ssl: isProduction ? {
                 rejectUnauthorized: false // Vercel/Neon 环境必须开启此选项
-            }
+            } : undefined
+        } : {
+            // Local Config
+            user: config.database.user,
+            password: config.database.password,
+            host: config.database.host,
+            port: config.database.port,
+            database: config.database.name,
         },
         tableName: 'session', // 确保你的数据库里会自动创建这张表
         createTableIfMissing: true // 自动建表

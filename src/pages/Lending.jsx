@@ -17,7 +17,7 @@ export default function LendingPage() {
             setLoading(true);
             // Backend: supports filtering status=lent in getItems
             const res = await api.get('/items?status=lent');
-            setLentItems(res.data.items || []);
+            setLentItems(res.items || []);
         } catch (e) {
             console.error("Fetch lent items error", e);
         } finally {

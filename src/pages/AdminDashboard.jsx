@@ -23,13 +23,13 @@ export default function AdminDashboard() {
         try {
             setLoading(true);
             const statsRes = await api.getAdminStats();
-            if (statsRes && statsRes.data) {
-                setStats(statsRes.data);
+            if (statsRes) {
+                setStats(statsRes);
             }
 
             const usersRes = await api.getUsers();
-            if (usersRes && usersRes.data && usersRes.data.users) {
-                setUsers(usersRes.data.users);
+            if (usersRes && usersRes.users) {
+                setUsers(usersRes.users);
             }
         } catch (e) {
             console.error("Failed to fetch admin data", e);

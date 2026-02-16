@@ -104,7 +104,7 @@ export default function Profile() {
 
             // 1. Fetch fresh user data from server
             const userRes = await api.get('/auth/me');
-            const userData = userRes.data?.user;
+            const userData = userRes.user;
 
             if (userData) {
                 setUser(userData);
@@ -137,7 +137,7 @@ export default function Profile() {
 
             // 2. Fetch items stats
             const itemsRes = await api.get('/items');
-            const items = itemsRes.data?.items || [];
+            const items = itemsRes.items || [];
 
             if (items) {
                 const totalItems = items.length;

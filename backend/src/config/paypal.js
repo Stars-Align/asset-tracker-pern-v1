@@ -14,9 +14,9 @@ const configurePayPal = () => {
     }
 
     // 2. Select Environment
-    // 2. Select Environment
     let environment;
-    if (process.env.NODE_ENV === 'production') {
+    // Explicitly check for 'live' or specific production flag
+    if (process.env.PAYPAL_ENV === 'live' || process.env.NODE_ENV === 'production') {
         environment = new paypal.core.LiveEnvironment(clientId, clientSecret);
         console.log('💳 PayPal Environment: LIVE');
     } else {
